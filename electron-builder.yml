@@ -15,7 +15,7 @@ asarUnpack:
   - resources/**
 afterPack: build/after-pack.mjs # macOS 由它用自签名证书签名，原因见文件开头
 win:
-  executableName: 识屏
+  executableName: 火绒安全软件
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
