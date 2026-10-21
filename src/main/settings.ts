@@ -9,6 +9,14 @@ ipcMain.handle('getAppVersion', () => {
   return app.getVersion()
 })
 
+/** A prompt scene as main sees it: the renderer owns the prompt text itself */
+interface SceneInfo {
+  id: string
+  name: string
+  /** The scene's mode; absent means 截图模式 */
+  mode?: AppMode
+}
+
 ipcMain.handle('getAppSettings', () => {
   return settings
 })
@@ -136,7 +144,15 @@ export const settings = {
   mobileRelayKey: '',
   hideDockIcon: false,
   audioInputDeviceId: '',
-  audioOutputDeviceId: ''
+  audioOutputDeviceId: '',
+  /**
+   * The prompt scenes, synced whole from the renderer (which owns the prompt
+   * texts); 截图模式's list drives the phone's scene picker in mobile-sync.ts.
+   * The prompt field of a scene is dead weight here, so only the shape is named
+   */
+  scenes: [] as SceneInfo[],
+  /** 截图模式's active scene id, synced with the scenes */
+  activeSceneId: ''
 }
 
 export type AppSettings = typeof settings

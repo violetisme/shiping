@@ -674,6 +674,113 @@ html[data-code-wrap='off'] .code-block code {
   color: var(--hl-keyword);
 }
 
+/* ---- 场景 ---- */
+
+/* 截图模式's active prompt scene; tapping lists them all */
+#scene {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--fg-soft);
+  font-size: 13.5px;
+  line-height: 1.5;
+  transition: opacity 0.2s;
+}
+
+#scene .label {
+  flex: none;
+  color: var(--muted);
+}
+
+#scene-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg);
+  font-weight: 600;
+}
+
+#scene svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--muted);
+}
+
+/* The computer is offline, or the page is between connections */
+#scene.off {
+  opacity: 0.4;
+}
+
+/* The picker, a bottom sheet over everything but the toast */
+#scene-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+}
+
+#scene-mask {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.45);
+}
+
+#scene-list {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 70%;
+  padding: 12px max(14px, env(safe-area-inset-right))
+    calc(14px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  overflow-y: auto;
+  border-radius: 16px 16px 0 0;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+#scene-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--fg);
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+#scene-list button svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--accent);
+  opacity: 0;
+}
+
+#scene-list button[aria-selected='true'] {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  color: var(--accent);
+}
+
+#scene-list button[aria-selected='true'] svg {
+  opacity: 1;
+}
+
 /* ---- 对话模式 ---- */
 
 .turn {

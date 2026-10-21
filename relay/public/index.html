@@ -39,6 +39,11 @@
 
     <main>
       <section id="screenshot">
+        <button id="scene" hidden>
+          <span class="label">场景</span>
+          <span id="scene-name"></span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+        </button>
         <div id="answer-meta" class="chips"></div>
         <div id="answer-error" class="error-box" hidden></div>
         <article id="answer" class="markdown"></article>
@@ -87,6 +92,10 @@
       <span class="label-start">开始答题</span>
       <span class="label-stop">停止解答</span>
     </button>
+    <div id="scene-sheet" hidden>
+      <div id="scene-mask"></div>
+      <div id="scene-list" role="listbox" aria-label="选择答题场景"></div>
+    </div>
     <div id="toast" hidden></div>
 
     <script src="vendor/marked.umd.js"></script>

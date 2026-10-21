@@ -448,6 +448,67 @@
     toast(stopping ? '已让电脑停止' : '已让电脑开始答题')
   })
 
+  // ---- 切换场景 ----
+
+  // 截图模式's prompt scene, shown above the answer and switched here. An older
+  // computer sends no `scene`, and then the bar stays hidden
+  const sceneEl = $('scene')
+  const sceneNameEl = $('scene-name')
+  const sceneSheetEl = $('scene-sheet')
+  const sceneListEl = $('scene-list')
+  let sceneOpen = false
+
+  const desktopOpen = () => Boolean(hostOnline && socket && socket.readyState === WebSocket.OPEN)
+
+  function renderScene() {
+    const scene = state?.scene
+    sceneEl.hidden = !scene
+    if (!scene) {
+      closeSceneSheet()
+      return
+    }
+    sceneNameEl.textContent = scene.name
+    // The computer is offline: the taps would go nowhere; dimmed like the action button
+    sceneEl.classList.toggle('off', !desktopOpen())
+    if (sceneOpen) renderSceneList(scene)
+  }
+
+  function renderSceneList(scene) {
+    sceneListEl.innerHTML = scene.list
+      .map(
+        (s) =>
+          `<button type="button" role="option" aria-selected="${s.id === scene.id}" data-scene-id="${escapeHtml(s.id)}"><span>${escapeHtml(s.name)}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg></button>`
+      )
+      .join('')
+  }
+
+  function closeSceneSheet() {
+    sceneOpen = false
+    sceneSheetEl.hidden = true
+  }
+
+  sceneEl.addEventListener('click', () => {
+    const scene = state?.scene
+    if (!scene || !desktopOpen()) return
+    sceneOpen = true
+    renderSceneList(scene)
+    sceneSheetEl.hidden = false
+  })
+
+  sceneSheetEl.addEventListener('click', (event) => {
+    // A tap on the mask (or anywhere off an option) just closes the sheet
+    const option = event.target.closest?.('[data-scene-id]')
+    closeSceneSheet()
+    if (!option || !desktopOpen()) return
+    const scene = state?.scene
+    const id = option.dataset.sceneId
+    if (!scene || id === scene.id) return
+    if (Date.now() - lastActionAt < 1000) return
+    lastActionAt = Date.now()
+    socket.send(JSON.stringify({ type: 'action', action: 'setScene', value: id }))
+    toast(`已切换到「${scene.list.find((s) => s.id === id)?.name || id}」`)
+  })
+
   /** Render what changed; returns whether the tab in view did */
   function renderNow() {
     if (!state) return false
@@ -519,6 +580,7 @@
   function onState(next) {
     state = next
     renderAction()
+    renderScene()
     if (next.mode && next.mode !== desktopMode) {
       desktopMode = next.mode
       showTab(next.mode)
@@ -601,6 +663,7 @@
       if (message.type === 'host') {
         hostOnline = message.online
         renderAction()
+        renderScene()
         // A restarted app counts from 0 again, and a state kept from before
         // a reconnect holds presses this page has already followed
         lastPaging = null
@@ -619,6 +682,7 @@
       if (socket !== ws) return
       socket = null
       renderAction()
+      renderScene()
       setStatus('offline', '重连中')
       retryLater()
     }
@@ -636,5 +700,6 @@
   })
 
   renderAction()
+  renderScene()
   connect()
 })()

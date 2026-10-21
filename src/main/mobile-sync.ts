@@ -10,7 +10,7 @@ import highlightJs from '../../relay/public/vendor/highlight.min.js?raw'
 import { settings, onSettingsChanged } from './settings'
 import { state } from './state'
 import type { AppMode } from '../shared/api-profile'
-import type { MobileState, MobileSyncStatus } from '../shared/mobile'
+import type { MobileScene, MobileState, MobileSyncStatus } from '../shared/mobile'
 
 /**
  * 手机同步: the answers on screen, mirrored to a phone's browser. Two ways out,
@@ -98,8 +98,33 @@ function buildState(): MobileState {
     mode: lastMode,
     paging,
     screenshot: { ...screenshot, text: tailForPhone(screenshot.text) },
-    conversation: sources.conversation?.() ?? { utterances: [], hints: [] }
+    conversation: sources.conversation?.() ?? { utterances: [], hints: [] },
+    scene: sceneForPhone()
   }
+}
+
+/**
+ * 截图模式's prompt scenes for the phones. The list lives in the renderer and
+ * arrives with the settings sync, so it is absent until then; a phone shows
+ * nothing and switches nothing in the meantime
+ */
+function sceneForPhone(): MobileScene | undefined {
+  const list = (settings.scenes ?? []).filter((s) => (s.mode ?? 'screenshot') === 'screenshot')
+  if (list.length === 0) return undefined
+  const active = list.find((s) => s.id === settings.activeSceneId) ?? list[0]
+  return {
+    id: active.id,
+    name: active.name,
+    list: list.map((s) => ({ id: s.id, name: s.name }))
+  }
+}
+
+/** What the phones last saw of the scene part, to notice a change from the settings sync */
+let lastSceneKey = ''
+
+function sceneKey(): string {
+  const scene = sceneForPhone()
+  return scene ? `${scene.id}|${scene.list.map((s) => s.id).join(',')}` : ''
 }
 
 let syncTimer: NodeJS.Timeout | null = null
@@ -125,30 +150,37 @@ function flush() {
 
 /**
  * What a phone may trigger on the desktop: 开始答题 (the same as the screenshot
- * shortcut) and, while an answer streams, stopping it. The page's buttons map
- * onto these names; anything else is dropped
+ * shortcut), stopping a streaming answer, and picking 截图模式's prompt scene
+ * (`setScene`, whose `value` names it). The page's buttons map onto these
+ * names; anything else is dropped
  */
-const MOBILE_ACTIONS = new Set(['takeScreenshot', 'stopSolutionStream'])
+const MOBILE_ACTIONS = new Set(['takeScreenshot', 'stopSolutionStream', 'setScene'])
 
 /**
  * Who runs the actions. Registered by shortcuts.ts (which imports this file),
  * so the phone goes through the same validation as the overlay toolbar
  */
-let actionHandler: ((action: string) => void) | null = null
+let actionHandler: ((action: string, value?: string) => void) | null = null
 
-export function registerMobileActionHandler(handler: (action: string) => void): void {
+export function registerMobileActionHandler(
+  handler: (action: string, value?: string) => void
+): void {
   actionHandler = handler
 }
 
 let lastActionAt = 0
 
-function runPhoneAction(action: string): void {
+function runPhoneAction(action: string, value?: string): void {
   if (!MOBILE_ACTIONS.has(action)) return
+  // A scene switch names its scene, and only one the phones were shown
+  if (action === 'setScene' && !(value && sceneForPhone()?.list.some((s) => s.id === value))) {
+    return
+  }
   // A tap-happy page or a hostile client must not pump screenshots; one at a time
   const now = Date.now()
   if (now - lastActionAt < 800) return
   lastActionAt = now
-  actionHandler?.(action)
+  actionHandler?.(action, value)
 }
 
 // ---- Status, for the settings page ----
@@ -321,8 +353,11 @@ function connectRelay(id: string, base: URL, key: string): RelayClient {
         if (message?.type === 'viewers') {
           set({ viewers: Number(message.count) || 0, maxViewers: Number(message.max) || undefined })
         } else if (message?.type === 'viewer' && typeof message.action === 'string') {
-          // A phone's button, forwarded by the relay
-          runPhoneAction(message.action)
+          // A phone's button, forwarded by the relay (setScene rides a value)
+          runPhoneAction(
+            message.action,
+            typeof message.value === 'string' ? message.value : undefined
+          )
         }
       } catch {
         // not ours
@@ -423,6 +458,12 @@ let reconcileTimer: NodeJS.Timeout | null = null
 onSettingsChanged(() => {
   if (reconcileTimer) clearTimeout(reconcileTimer)
   reconcileTimer = setTimeout(reconcile, RECONCILE_DELAY)
+  // The scene list rides the settings sync; a change must reach the phones too
+  const key = sceneKey()
+  if (key !== lastSceneKey) {
+    lastSceneKey = key
+    markMobileDirty()
+  }
 })
 
 ipcMain.handle('mobile:get-status', () => getStatus())

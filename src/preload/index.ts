@@ -137,6 +137,14 @@ const api = {
     ipcRenderer.removeAllListeners('cycle-scene')
   },
 
+  // A phone picked a prompt scene for 截图模式; the id is one of the synced scenes
+  onSetScene: (callback: (sceneId: string) => void) => {
+    ipcRenderer.on('set-scene', (_event, sceneId: string) => callback(sceneId))
+  },
+  removeSetSceneListener: () => {
+    ipcRenderer.removeAllListeners('set-scene')
+  },
+
   // Shortcut or toolbar asked to show the other mode (截图 ↔ 对话)
   onSwitchMode: (callback: () => void) => {
     ipcRenderer.on('switch-mode', () => callback())

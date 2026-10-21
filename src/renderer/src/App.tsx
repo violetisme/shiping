@@ -6,7 +6,7 @@ import ConversationPage from '@/conversation'
 import SettingsPage from '@/settings'
 import HelpPage from '@/help'
 import { OverlayToolbar } from '@/coder/OverlayToolbar'
-import { useSettingsStore } from '@/lib/store/settings'
+import { useSettingsStore, sceneMode } from '@/lib/store/settings'
 import { useShortcutsStore } from '@/lib/store/shortcuts'
 import { useAppStore } from '@/lib/store/app'
 import { getCloneableFields } from '@/lib/utils'
@@ -71,6 +71,19 @@ export default function App() {
       if (profile && profile.vision === undefined) store.updateProfile(profileId, { vision: false })
     })
     return () => window.api.removeVisionUnsupportedListener()
+  }, [])
+
+  // A phone picked a prompt scene for 截图模式 (mobile-sync checked the id in
+  // main). Works on every page: an answer already streaming keeps its prompt
+  useEffect(() => {
+    window.api.onSetScene((sceneId) => {
+      const store = useSettingsStore.getState()
+      const scene = store.scenes.find((s) => s.id === sceneId && sceneMode(s) === 'screenshot')
+      if (!scene || scene.id === store.activeSceneId) return
+      store.setActiveScene(sceneId)
+      toast(`已切换到「${scene.name}」`, { description: '下次提问生效', duration: 3000 })
+    })
+    return () => window.api.removeSetSceneListener()
   }, [])
 
   // A newer release, as main finds it: at startup and every few hours after

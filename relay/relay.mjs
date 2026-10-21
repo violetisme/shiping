@@ -24,6 +24,7 @@ import { WebSocketServer, WebSocket } from 'ws'
  * An action is a phone button's tap (开始答题, …): forwarded to the host when
  * there is one, else handed to `onAction` (局域网, where the app is the relay).
  * The relay does not judge the action's name; the app keeps its own allowlist.
+ * `setScene` rides a `value` (the scene's id), passed through untouched.
  *
  * Auth: one secret key. The host presents it as a bearer token; viewers present
  * `deriveViewerToken(key)`, so the QR code on a phone never holds the key
@@ -94,7 +95,7 @@ const SECURITY_HEADERS = {
  * @param {string} [options.hostKey] What the host must present; without one `/host` is refused
  * @param {number} [options.maxViewers]
  * @param {(count: number) => void} [options.onViewers] Called whenever a viewer comes or goes
- * @param {(action: string) => void} [options.onAction] A viewer's action, when there is no host to forward it to
+ * @param {(action: string, value?: string) => void} [options.onAction] A viewer's action, when there is no host to forward it to
  * @param {(message: string) => void} [options.log]
  */
 export function createRelay({
@@ -267,10 +268,12 @@ export function createRelay({
       }
       if (message?.type === 'action' && typeof message.action === 'string') {
         const action = message.action.trim().slice(0, 64)
+        // setScene names its scene in `value`; an older host ignores the field
+        const value = typeof message.value === 'string' ? message.value.trim().slice(0, 64) : undefined
         // On a public relay the app is the host socket; on 局域网 there is none
         if (action) {
-          if (host) sendJSON(host, { type: 'viewer', action })
-          else onAction(action)
+          if (host) sendJSON(host, { type: 'viewer', action, value })
+          else onAction(action, value)
         }
       }
     })

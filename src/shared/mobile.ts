@@ -25,6 +25,15 @@ export interface MobileConversation {
   hints: Pick<HintCard, 'id' | 'fromId' | 'toId' | 'status' | 'text' | 'error'>[]
 }
 
+/** 截图模式's prompt scenes, shown and switchable on the phone */
+export interface MobileScene {
+  /** The scene answering with now */
+  id: string
+  name: string
+  /** Every scene of the mode, in list order */
+  list: { id: string; name: string }[]
+}
+
 export interface MobileState {
   v: 1
   /** The mode page on screen, or the last one that was */
@@ -37,6 +46,8 @@ export interface MobileState {
   paging: number
   screenshot: MobileAnswer
   conversation: MobileConversation
+  /** Absent until the app's renderer synced its scene list (or 截图模式 has none) */
+  scene?: MobileScene
 }
 
 export type MobileLinkState = 'off' | 'starting' | 'on' | 'error'

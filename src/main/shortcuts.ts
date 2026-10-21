@@ -885,10 +885,26 @@ function runAction(action: string): boolean {
 
 ipcMain.handle('triggerAction', (_event, action: string) => runAction(action))
 
-// The phone's 开始答题 / 停止 taps (mobile-sync keeps its own, smaller allowlist)
-registerMobileActionHandler((action) => {
+// The phone's taps (mobile-sync keeps its own, smaller allowlist; setScene
+// carries the scene's id, already checked against the list it published)
+registerMobileActionHandler((action, value) => {
+  if (action === 'setScene') {
+    sendSetScene(value)
+    return
+  }
   runAction(action)
 })
+
+/**
+ * The phone picked a prompt scene for 截图模式. The list lives in the renderer,
+ * so main only forwards the id, on every page: the prompt is read at the next
+ * request, and an answer already streaming keeps the one it started with
+ */
+function sendSetScene(sceneId: string | undefined): void {
+  const mainWindow = global.mainWindow
+  if (!mainWindow || mainWindow.isDestroyed() || !sceneId) return
+  mainWindow.webContents.send('set-scene', sceneId)
+}
 
 ipcMain.handle('setToolbarVisible', (_event, visible: boolean) => {
   setToolbarWanted(visible)

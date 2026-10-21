@@ -161,7 +161,7 @@ export function MobileSection() {
     <SettingsCard Icon={Smartphone} title="手机同步">
       <div className="space-y-4">
         <p className="text-xs text-gray-700">
-          把截图模式的解答和对话模式的提示实时同步到手机浏览器上，也可以在手机上点「开始答题」让电脑截屏解答。二维码只显示在本窗口里，共享屏幕时对方看不到。
+          把截图模式的解答和对话模式的提示实时同步到手机浏览器上，也可以在手机上点「开始答题」让电脑截屏解答、切换答题场景。二维码只显示在本窗口里，共享屏幕时对方看不到。
         </p>
 
         <Field
