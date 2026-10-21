@@ -15,6 +15,8 @@ export interface RelayOptions {
   maxViewers?: number
   /** Called whenever a viewer comes or goes */
   onViewers?: (count: number) => void
+  /** A viewer's action, when there is no host to forward it to (局域网) */
+  onAction?: (action: string) => void
   log?: (message: string) => void
 }
 

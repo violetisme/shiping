@@ -57,7 +57,7 @@
           <circle cx="12" cy="12" r="3" />
         </svg>
         <div class="title">等待截图</div>
-        <div class="hint">在电脑上按截图快捷键，解答会实时出现在这里</div>
+        <div class="hint">点右下角「开始答题」，或在电脑上按截图快捷键，解答会实时出现在这里</div>
       </div>
     </template>
     <template id="empty-conversation">
@@ -74,6 +74,18 @@
     <button id="jump" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" /></svg>
       有新内容
+    </button>
+    <button id="action" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          class="icon-start"
+          d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"
+        />
+        <circle class="icon-start" cx="12" cy="12" r="3" />
+        <rect class="icon-stop" x="7" y="7" width="10" height="10" rx="2" />
+      </svg>
+      <span class="label-start">开始答题</span>
+      <span class="label-stop">停止解答</span>
     </button>
     <div id="toast" hidden></div>
 

@@ -133,7 +133,7 @@ function Notes() {
           电脑上按{key('pageUp')}/{key('pageDown')}翻页，手机跟着翻
         </li>
         <li>
-          二维码链接相当于只读密码，别外发；泄露了就点「更换二维码」（公网中转则换服务器密钥）
+          二维码链接相当于密码，拿到就能操控电脑「开始答题」，别外发；泄露了就点「更换二维码」（公网中转则换服务器密钥）
         </li>
         <li>地址是 http:// 时内容明文传输，在公共 Wi-Fi 上留意</li>
       </ul>
@@ -161,7 +161,7 @@ export function MobileSection() {
     <SettingsCard Icon={Smartphone} title="手机同步">
       <div className="space-y-4">
         <p className="text-xs text-gray-700">
-          把截图模式的解答和对话模式的提示实时同步到手机浏览器上，手机只看不操作。二维码只显示在本窗口里，共享屏幕时对方看不到。
+          把截图模式的解答和对话模式的提示实时同步到手机浏览器上，也可以在手机上点「开始答题」让电脑截屏解答。二维码只显示在本窗口里，共享屏幕时对方看不到。
         </p>
 
         <Field

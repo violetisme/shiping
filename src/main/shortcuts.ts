@@ -21,7 +21,7 @@ import { getTranscriptionText, clearTranscriptionText } from './transcription'
 import { consumeStream, extractErrorMessage, isImageInputRefused } from './stream'
 import type { StreamChunk } from './stream'
 import { requestHint, stopHints, clearConversation } from './conversation'
-import { markMobileDirty, pageMobile, registerMobileSource } from './mobile-sync'
+import { markMobileDirty, pageMobile, registerMobileActionHandler, registerMobileSource } from './mobile-sync'
 import type { MobileAnswer } from '../shared/mobile'
 
 type Shortcut = {
@@ -876,10 +876,18 @@ ipcMain.handle('updateShortcuts', (_event, _shortcuts: { action: string; key: st
 
 ipcMain.handle('stopSolutionStream', () => stopAnswer())
 
-ipcMain.handle('triggerAction', (_event, action: string) => {
+/** The overlay toolbar and the phones may only run these */
+function runAction(action: string): boolean {
   if (!clickableActions.has(action)) return false
   callbacks[action]?.()
   return true
+}
+
+ipcMain.handle('triggerAction', (_event, action: string) => runAction(action))
+
+// The phone's 开始答题 / 停止 taps (mobile-sync keeps its own, smaller allowlist)
+registerMobileActionHandler((action) => {
+  runAction(action)
 })
 
 ipcMain.handle('setToolbarVisible', (_event, visible: boolean) => {

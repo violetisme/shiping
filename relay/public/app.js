@@ -289,6 +289,7 @@
     $('screenshot').hidden = next !== 'screenshot'
     $('conversation').hidden = next !== 'conversation'
     jumpEl.hidden = true
+    renderAction()
     renderNow()
     const saved = tabScroll[next]
     scrollTo(0, saved === null ? root.scrollHeight : saved)
@@ -418,6 +419,35 @@
     pageTimer = setTimeout(() => (pageTarget = null), 800)
   }
 
+  // ---- Controlling the desktop ----
+
+  // 「开始答题」 captures the desktop's screen and streams the answer here; while
+  // one streams, the button stops it. One small frame rides the same socket: an
+  // older computer or relay ignores it, and the desktop runs only what it allows
+  const actionEl = $('action')
+  let hostOnline = false
+  let lastActionAt = 0
+
+  function renderAction() {
+    const streaming = state?.screenshot?.status === 'streaming'
+    actionEl.hidden = tab !== 'screenshot'
+    actionEl.classList.toggle('stopping', streaming)
+    // The computer is offline or the page is between connections: inert, not gone
+    actionEl.classList.toggle('off', !hostOnline || !socket)
+  }
+
+  actionEl.addEventListener('click', () => {
+    if (!hostOnline || !socket || socket.readyState !== WebSocket.OPEN) return
+    const now = Date.now()
+    if (now - lastActionAt < 1000) return
+    lastActionAt = now
+    const stopping = state?.screenshot?.status === 'streaming'
+    socket.send(
+      JSON.stringify({ type: 'action', action: stopping ? 'stopSolutionStream' : 'takeScreenshot' })
+    )
+    toast(stopping ? '已让电脑停止' : '已让电脑开始答题')
+  })
+
   /** Render what changed; returns whether the tab in view did */
   function renderNow() {
     if (!state) return false
@@ -488,6 +518,7 @@
 
   function onState(next) {
     state = next
+    renderAction()
     if (next.mode && next.mode !== desktopMode) {
       desktopMode = next.mode
       showTab(next.mode)
@@ -568,6 +599,8 @@
         return
       }
       if (message.type === 'host') {
+        hostOnline = message.online
+        renderAction()
         // A restarted app counts from 0 again, and a state kept from before
         // a reconnect holds presses this page has already followed
         lastPaging = null
@@ -585,6 +618,7 @@
     ws.onclose = () => {
       if (socket !== ws) return
       socket = null
+      renderAction()
       setStatus('offline', '重连中')
       retryLater()
     }
@@ -601,5 +635,6 @@
     if (!socket) connect()
   })
 
+  renderAction()
   connect()
 })()

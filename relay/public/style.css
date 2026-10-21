@@ -802,6 +802,61 @@ html[data-code-wrap='off'] .code-block code {
   stroke-width: 2.2;
 }
 
+/* 开始答题, bottom right so it clears #jump in the middle */
+#action {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  box-shadow: var(--shadow);
+  transition: opacity 0.2s;
+}
+
+#action svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2;
+}
+
+#action .icon-stop,
+#action .label-stop {
+  display: none;
+}
+
+/* An answer is streaming: the same button stops it */
+#action.stopping {
+  background: var(--bad);
+}
+
+#action.stopping .icon-start,
+#action.stopping .label-start {
+  display: none;
+}
+
+#action.stopping .icon-stop {
+  display: inline;
+}
+
+#action.stopping .label-stop {
+  display: inline;
+}
+
+/* The computer is offline, or the page is between connections */
+#action.off {
+  opacity: 0.4;
+}
+
 #toast {
   position: fixed;
   left: 50%;

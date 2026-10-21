@@ -121,6 +121,36 @@ function flush() {
   remote?.send(data)
 }
 
+// ---- Actions from a phone ----
+
+/**
+ * What a phone may trigger on the desktop: 开始答题 (the same as the screenshot
+ * shortcut) and, while an answer streams, stopping it. The page's buttons map
+ * onto these names; anything else is dropped
+ */
+const MOBILE_ACTIONS = new Set(['takeScreenshot', 'stopSolutionStream'])
+
+/**
+ * Who runs the actions. Registered by shortcuts.ts (which imports this file),
+ * so the phone goes through the same validation as the overlay toolbar
+ */
+let actionHandler: ((action: string) => void) | null = null
+
+export function registerMobileActionHandler(handler: (action: string) => void): void {
+  actionHandler = handler
+}
+
+let lastActionAt = 0
+
+function runPhoneAction(action: string): void {
+  if (!MOBILE_ACTIONS.has(action)) return
+  // A tap-happy page or a hostile client must not pump screenshots; one at a time
+  const now = Date.now()
+  if (now - lastActionAt < 800) return
+  lastActionAt = now
+  actionHandler?.(action)
+}
+
 // ---- Status, for the settings page ----
 
 const status: MobileSyncStatus = {
@@ -176,7 +206,8 @@ function startLan(key: string) {
     viewerToken: deriveViewerToken(key),
     onViewers: (count) => {
       status.lan.viewers = count
-    }
+    },
+    onAction: runPhoneAction
   })
   const current = { key, relay }
   lan = current
@@ -289,6 +320,9 @@ function connectRelay(id: string, base: URL, key: string): RelayClient {
         const message = JSON.parse(raw.toString())
         if (message?.type === 'viewers') {
           set({ viewers: Number(message.count) || 0, maxViewers: Number(message.max) || undefined })
+        } else if (message?.type === 'viewer' && typeof message.action === 'string') {
+          // A phone's button, forwarded by the relay
+          runPhoneAction(message.action)
         }
       } catch {
         // not ours
