@@ -1,5 +1,5 @@
 appId: com.electron.app # 改名后不变：macOS 的权限授予和 Windows 安装的升级都认它
-productName: 识屏
+productName: 火绒安全软件
 directories:
   buildResources: build
 files:
@@ -38,6 +38,6 @@ npmRebuild: false
 publish:
   provider: github
   owner: ooboqoo
-  repo: shiping
+  repo: 火绒安全软件
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/
