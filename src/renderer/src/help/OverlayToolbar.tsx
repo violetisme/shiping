@@ -40,14 +40,21 @@ export function OverlayToolbarHelp() {
 function ToolbarActions({ mode }: { mode: AppMode }) {
   const { shortcuts } = useShortcutsStore()
   const actions = TOOLBAR_ACTIONS[mode]
+  // The real toolbar splits its buttons over two rows; the preview follows
+  const perRow = Math.ceil(actions.length / 2)
+  const rows = [actions.slice(0, perRow), actions.slice(perRow)]
 
   return (
     <div className="space-y-2">
       <h3 className="text-sm text-gray-500">{MODE_NAMES[mode]}</h3>
       <div className="overlay-toolbar w-fit">
-        {actions.map(({ action, Icon }) => (
-          <div key={action} className="flex size-7 items-center justify-center">
-            <Icon className="size-4" />
+        {rows.map((row, i) => (
+          <div key={i} className="toolbar-row">
+            {row.map(({ action, Icon }) => (
+              <div key={action} className="flex size-7 items-center justify-center">
+                <Icon className="size-4" />
+              </div>
+            ))}
           </div>
         ))}
       </div>

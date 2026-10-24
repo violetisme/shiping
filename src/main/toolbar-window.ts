@@ -2,9 +2,13 @@ import { join } from 'node:path'
 import { BrowserWindow, screen } from 'electron'
 import { is } from '@electron-toolkit/utils'
 
-/** Room for every button of the longer mode's toolbar: 16 × 28px, 2px gaps, 8px padding each side */
-const TOOLBAR_WIDTH = 494
-const TOOLBAR_HEIGHT = 44
+/**
+ * Two rows of buttons, evenly split. Width seeds at 9 per row (30px each, plus
+ * 16px of padding): 9 + 8 rows fit the longer mode's 17 buttons. Height is two
+ * 28px rows, a 2px gap and 8px padding each side.
+ */
+const TOOLBAR_WIDTH = 284
+const TOOLBAR_HEIGHT = 74
 const TOOLBAR_INSET = 4
 /** Mirrors the renderer's default opacity setting, until the renderer syncs the real one */
 const DEFAULT_OPACITY = 0.8

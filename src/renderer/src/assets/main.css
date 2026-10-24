@@ -169,10 +169,27 @@ body:has(.overlay-toolbar-root) {
  * Resizing the toolbar window never rescales its buttons: the bar simply takes
  * the whole window, and OverlayToolbar drops the buttons that no longer fit.
  * `overflow` is the backstop for the rounding the button count cannot cover.
+ * The buttons sit on two rows: the bar turns into a column of `.toolbar-row`s,
+ * each row a copy of the bar's own one-row layout. The help page's preview
+ * grows to fit its rows; the toolbar window's root is pinned to the window
+ * instead (it must win over the `:has` rule, hence the double class and the
+ * order), and stretches its rows so the buttons stay left-aligned.
  */
-.overlay-toolbar-root {
+.overlay-toolbar:has(.toolbar-row) {
+  height: auto;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.overlay-toolbar.overlay-toolbar-root {
   height: 100vh;
   overflow: hidden;
+  align-items: stretch;
+}
+
+.toolbar-row {
+  @apply flex items-center gap-0.5;
 }
 
 /*

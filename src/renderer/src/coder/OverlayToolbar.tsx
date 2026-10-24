@@ -7,16 +7,19 @@ import { applyTheme } from '@/lib/theme'
 import { useAppStore } from '@/lib/store/app'
 import { cn } from '@/lib/utils'
 
-/** Mirrors `.overlay-toolbar` in main.css: `p-2` around `size-7` buttons with `gap-0.5` */
-const BAR_PADDING = 8
-const BUTTON_SIZE = 28
-const BUTTON_GAP = 2
-
 /**
  * Toolbar rendered in its own always-on-top window above the main window.
  * Buttons carry no `title`: a native tooltip would be drawn outside the window
  * and would therefore not be covered by the window's content protection.
  */
+
+/** Mirrors `.overlay-toolbar` in main.css: `p-2` around `size-7` buttons with `gap-0.5` */
+const BAR_PADDING = 8
+const BUTTON_SIZE = 28
+const BUTTON_GAP = 2
+/** The buttons sit on two rows, split as evenly as the count allows */
+const ROWS = 2
+
 export function OverlayToolbar() {
   const [hoverDelay, setHoverDelay] = useState(0)
   const barRef = useRef<HTMLDivElement>(null)
@@ -25,6 +28,11 @@ export function OverlayToolbar() {
   const autoAnswer = useAppStore((state) => state.autoAnswer)
   const actions = TOOLBAR_ACTIONS[inConversationPage ? 'conversation' : 'screenshot']
   const visibleCount = useVisibleActionCount(barRef, actions.length)
+  const perRow = Math.ceil(visibleCount / ROWS)
+  const rows = [
+    actions.slice(0, perRow),
+    actions.slice(perRow, visibleCount)
+  ]
 
   // This window's store is its own copy, so the state main pushes has to be
   // relayed here; otherwise the toolbar's own buttons show stale state. The
@@ -55,16 +63,20 @@ export function OverlayToolbar() {
 
   return (
     <div ref={barRef} className="overlay-toolbar overlay-toolbar-root">
-      {actions.slice(0, visibleCount).map(({ action, Icon }) => (
-        <ToolbarButton
-          key={action}
-          action={action}
-          Icon={Icon}
-          hoverDelay={hoverDelay}
-          active={action === 'cycleAutoAnswer' && autoAnswer}
-        />
+      {rows.map((row, i) => (
+        <div key={i} className="toolbar-row">
+          {row.map(({ action, Icon }) => (
+            <ToolbarButton
+              key={action}
+              action={action}
+              Icon={Icon}
+              hoverDelay={hoverDelay}
+              active={action === 'cycleAutoAnswer' && autoAnswer}
+            />
+          ))}
+        </div>
       ))}
-      {/* Always on, width only: the height is the button row. main.css keeps
+      {/* Always on, width only: the height is the two button rows. main.css keeps
           these edges from ever showing a resize cursor. `nonActivating` because
           Windows eats this window's presses, see ToolbarButton below */}
       <WindowResizeHandles enabled axis="x" nonActivating />
@@ -75,8 +87,9 @@ export function OverlayToolbar() {
 /**
  * Buttons keep their size when the toolbar window is resized; the ones that no
  * longer fit are dropped from the end, so a narrowed toolbar never shows a
- * sliver of a button. The bar's own width never depends on its children, so
- * measuring it here cannot feed back into the layout.
+ * sliver of a button. The bar's own width never depends on its children (it
+ * takes the whole window), so measuring it here cannot feed back into the
+ * layout. Capacity is per row, doubled for the two rows the bar renders.
  */
 function useVisibleActionCount(
   barRef: RefObject<HTMLDivElement | null>,
@@ -90,8 +103,8 @@ function useVisibleActionCount(
 
     const measure = () => {
       const available = bar.clientWidth - BAR_PADDING * 2
-      const fits = Math.floor((available + BUTTON_GAP) / (BUTTON_SIZE + BUTTON_GAP))
-      setCount(Math.min(actionCount, Math.max(1, fits)))
+      const perRow = Math.floor((available + BUTTON_GAP) / (BUTTON_SIZE + BUTTON_GAP))
+      setCount(Math.min(actionCount, Math.max(1, perRow) * ROWS))
     }
 
     measure()
