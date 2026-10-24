@@ -11,6 +11,10 @@ import { settings, onSettingsChanged } from './settings'
 import { state } from './state'
 import type { AppMode } from '../shared/api-profile'
 import type { MobileScene, MobileState, MobileSyncStatus } from '../shared/mobile'
+import {
+  DEFAULT_AUTO_ANSWER_INTERVAL,
+  autoAnswerIntervalFromValue
+} from '../shared/auto-answer'
 
 /**
  * 手机同步: the answers on screen, mirrored to a phone's browser. Two ways out,
@@ -99,6 +103,8 @@ function buildState(): MobileState {
     paging,
     screenshot: { ...screenshot, text: tailForPhone(screenshot.text) },
     conversation: sources.conversation?.() ?? { utterances: [], hints: [] },
+    autoAnswer: state.autoAnswer,
+    autoAnswerInterval: autoAnswerIntervalFromValue(settings.autoAnswerInterval) ?? DEFAULT_AUTO_ANSWER_INTERVAL,
     scene: sceneForPhone()
   }
 }
@@ -127,6 +133,13 @@ function sceneKey(): string {
   return scene ? `${scene.id}|${scene.list.map((s) => s.id).join(',')}` : ''
 }
 
+/** Same for the 自动答题 part, which also rides the settings sync */
+let lastAutoAnswerKey = ''
+
+function autoAnswerKey(): string {
+  return `${state.autoAnswer}|${settings.autoAnswerInterval}`
+}
+
 let syncTimer: NodeJS.Timeout | null = null
 let lastSyncAt = 0
 
@@ -151,10 +164,11 @@ function flush() {
 /**
  * What a phone may trigger on the desktop: 开始答题 (the same as the screenshot
  * shortcut), stopping a streaming answer, and picking 截图模式's prompt scene
- * (`setScene`, whose `value` names it). The page's buttons map onto these
- * names; anything else is dropped
+ * (`setScene`, whose `value` names it) or its 自动答题 interval
+ * (`setAutoAnswerInterval`, whose `value` is seconds or `off`). The page's
+ * buttons map onto these names; anything else is dropped
  */
-const MOBILE_ACTIONS = new Set(['takeScreenshot', 'stopSolutionStream', 'setScene'])
+const MOBILE_ACTIONS = new Set(['takeScreenshot', 'stopSolutionStream', 'setAutoAnswerInterval', 'setScene'])
 
 /**
  * Who runs the actions. Registered by shortcuts.ts (which imports this file),
@@ -174,6 +188,14 @@ function runPhoneAction(action: string, value?: string): void {
   if (!MOBILE_ACTIONS.has(action)) return
   // A scene switch names its scene, and only one the phones were shown
   if (action === 'setScene' && !(value && sceneForPhone()?.list.some((s) => s.id === value))) {
+    return
+  }
+  // An interval choice is seconds from the shared list, or `off`; anything
+  // else is dropped (main validates again)
+  if (
+    action === 'setAutoAnswerInterval' &&
+    !(value === 'off' || autoAnswerIntervalFromValue(value) !== null)
+  ) {
     return
   }
   // A tap-happy page or a hostile client must not pump screenshots; one at a time
@@ -458,12 +480,15 @@ let reconcileTimer: NodeJS.Timeout | null = null
 onSettingsChanged(() => {
   if (reconcileTimer) clearTimeout(reconcileTimer)
   reconcileTimer = setTimeout(reconcile, RECONCILE_DELAY)
-  // The scene list rides the settings sync; a change must reach the phones too
+  // The scene list and the 自动答题 interval ride the settings sync; a change
+  // must reach the phones too (a toggled switch marks itself dirty)
   const key = sceneKey()
   if (key !== lastSceneKey) {
     lastSceneKey = key
     markMobileDirty()
   }
+  if (lastAutoAnswerKey && autoAnswerKey() !== lastAutoAnswerKey) markMobileDirty()
+  lastAutoAnswerKey = autoAnswerKey()
 })
 
 ipcMain.handle('mobile:get-status', () => getStatus())

@@ -14,9 +14,7 @@ import { KnowledgeField } from '../KnowledgeField'
 import { ModeProfileSelect } from '../ModeProfileSelect'
 import { SceneEditor } from '../SceneEditor'
 import { Field, SaveDirField, SettingsCard } from '../components'
-
-/** 自动答题的截屏间隔选项（秒） */
-const AUTO_ANSWER_INTERVAL_OPTIONS = [5, 10, 15, 20, 30, 60]
+import { AUTO_ANSWER_INTERVALS } from '../../../../shared/auto-answer'
 
 export function ScreenshotSection({
   onEditProfile,
@@ -76,7 +74,7 @@ export function ScreenshotSection({
 
           <Field
             label="自动答题间隔"
-            note="在悬浮工具条开启「自动答题」后，每隔这么多秒自动截屏并解答一次（每次新开对话）；上一题还在解答时会等它完成"
+            note="悬浮工具条点按「自动答题」或手机端选择间隔后，每隔这么多秒自动截屏并解答一次（每次新开对话）；上一题还在解答时会等它完成"
           >
             <Select
               value={String(autoAnswerInterval)}
@@ -86,7 +84,7 @@ export function ScreenshotSection({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {AUTO_ANSWER_INTERVAL_OPTIONS.map((seconds) => (
+                {AUTO_ANSWER_INTERVALS.map((seconds) => (
                   <SelectItem key={seconds} value={String(seconds)}>
                     每 {seconds} 秒
                   </SelectItem>

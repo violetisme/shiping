@@ -86,6 +86,20 @@ export default function App() {
     return () => window.api.removeSetSceneListener()
   }, [])
 
+  // 自动答题 was picked on the overlay toolbar or a phone: persist the interval
+  // (the settings sync carries it back to main, which applied it already)
+  useEffect(() => {
+    window.api.onAutoAnswerChanged((seconds) => {
+      if (seconds !== null) {
+        useSettingsStore.getState().updateSetting('autoAnswerInterval', seconds)
+        toast(`自动答题：每 ${seconds} 秒`, { duration: 2500 })
+      } else {
+        toast('自动答题已关闭', { duration: 2500 })
+      }
+    })
+    return () => window.api.removeAutoAnswerChangedListener()
+  }, [])
+
   // A newer release, as main finds it: at startup and every few hours after
   useEffect(() => {
     const { setUpdate } = useAppStore.getState()

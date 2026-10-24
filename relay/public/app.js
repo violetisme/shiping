@@ -458,6 +458,77 @@
   const sceneListEl = $('scene-list')
   let sceneOpen = false
 
+  // ---- 自动答题 ----
+
+  // 截图模式's auto answer, switched and timed from here: tapping the bar opens
+  // a sheet of intervals (关闭 / 每 5 秒 / …). An older computer sends no
+  // `autoAnswer`, and then the bar stays hidden
+  /** Must match AUTO_ANSWER_INTERVALS in the app's src/shared/auto-answer.ts */
+  const AUTO_ANSWER_INTERVALS = [5, 10, 15, 20, 30, 60]
+  const autoAnswerEl = $('auto-answer')
+  const autoAnswerNoteEl = $('auto-answer-note')
+  const autoAnswerSheetEl = $('auto-answer-sheet')
+  const autoAnswerListEl = $('auto-answer-list')
+  let autoAnswerSheetOpen = false
+
+  /** What the switch is set to now, as the sheet's option value */
+  const autoAnswerChoice = () =>
+    state.autoAnswer ? String(state.autoAnswerInterval) : 'off'
+
+  function renderAutoAnswer() {
+    // `false` is a real state; only a missing field (an older app) hides it
+    autoAnswerEl.hidden = typeof state?.autoAnswer !== 'boolean'
+    if (autoAnswerEl.hidden) {
+      closeAutoAnswerSheet()
+      return
+    }
+    autoAnswerEl.setAttribute('aria-pressed', String(state.autoAnswer))
+    autoAnswerNoteEl.textContent = state.autoAnswer
+      ? `每 ${state.autoAnswerInterval || '…'} 秒自动截屏解答`
+      : '已关闭，点按选择间隔开启'
+    // The computer is offline: the tap would go nowhere; dimmed like the scene bar
+    autoAnswerEl.classList.toggle('off', !desktopOpen())
+    if (autoAnswerSheetOpen) renderAutoAnswerList()
+  }
+
+  function renderAutoAnswerList() {
+    const current = autoAnswerChoice()
+    const options = [{ value: 'off', label: '关闭' }].concat(
+      AUTO_ANSWER_INTERVALS.map((s) => ({ value: String(s), label: `每 ${s} 秒` }))
+    )
+    autoAnswerListEl.innerHTML = options
+      .map(
+        (o) =>
+          `<button type="button" role="option" aria-selected="${o.value === current}" data-auto-answer="${o.value}"><span>${o.label}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6.5"/></svg></button>`
+      )
+      .join('')
+  }
+
+  function closeAutoAnswerSheet() {
+    autoAnswerSheetOpen = false
+    autoAnswerSheetEl.hidden = true
+  }
+
+  autoAnswerEl.addEventListener('click', () => {
+    if (typeof state?.autoAnswer !== 'boolean' || !desktopOpen()) return
+    autoAnswerSheetOpen = true
+    renderAutoAnswerList()
+    autoAnswerSheetEl.hidden = false
+  })
+
+  autoAnswerSheetEl.addEventListener('click', (event) => {
+    // A tap on the mask (or anywhere off an option) just closes the sheet
+    const option = event.target.closest?.('[data-auto-answer]')
+    closeAutoAnswerSheet()
+    if (!option || !desktopOpen()) return
+    const value = option.dataset.autoAnswer
+    if (value === autoAnswerChoice()) return
+    if (Date.now() - lastActionAt < 1000) return
+    lastActionAt = Date.now()
+    socket.send(JSON.stringify({ type: 'action', action: 'setAutoAnswerInterval', value }))
+    toast(value === 'off' ? '已让电脑关闭自动答题' : `已设为每 ${value} 秒自动答题`)
+  })
+
   const desktopOpen = () => Boolean(hostOnline && socket && socket.readyState === WebSocket.OPEN)
 
   function renderScene() {
@@ -581,6 +652,7 @@
     state = next
     renderAction()
     renderScene()
+    renderAutoAnswer()
     if (next.mode && next.mode !== desktopMode) {
       desktopMode = next.mode
       showTab(next.mode)
@@ -664,6 +736,7 @@
         hostOnline = message.online
         renderAction()
         renderScene()
+        renderAutoAnswer()
         // A restarted app counts from 0 again, and a state kept from before
         // a reconnect holds presses this page has already followed
         lastPaging = null
@@ -683,6 +756,7 @@
       socket = null
       renderAction()
       renderScene()
+      renderAutoAnswer()
       setStatus('offline', '重连中')
       retryLater()
     }
@@ -701,5 +775,6 @@
 
   renderAction()
   renderScene()
+  renderAutoAnswer()
   connect()
 })()

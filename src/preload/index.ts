@@ -92,7 +92,7 @@ const api = {
       | 'cycleScene'
       | 'generateHint'
       | 'toggleHintMode'
-      | 'toggleAutoAnswer'
+      | 'cycleAutoAnswer'
       | 'switchMode'
   ) => ipcRenderer.invoke('triggerAction', action),
   setToolbarVisible: (visible: boolean) => ipcRenderer.invoke('setToolbarVisible', visible),
@@ -144,6 +144,14 @@ const api = {
   },
   removeSetSceneListener: () => {
     ipcRenderer.removeAllListeners('set-scene')
+  },
+
+  // 自动答题 was picked on the toolbar or a phone: the seconds, or null for off
+  onAutoAnswerChanged: (callback: (seconds: number | null) => void) => {
+    ipcRenderer.on('auto-answer-changed', (_event, seconds: number | null) => callback(seconds))
+  },
+  removeAutoAnswerChangedListener: () => {
+    ipcRenderer.removeAllListeners('auto-answer-changed')
   },
 
   // Shortcut or toolbar asked to show the other mode (截图 ↔ 对话)

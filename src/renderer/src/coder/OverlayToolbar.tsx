@@ -61,7 +61,7 @@ export function OverlayToolbar() {
           action={action}
           Icon={Icon}
           hoverDelay={hoverDelay}
-          active={action === 'toggleAutoAnswer' && autoAnswer}
+          active={action === 'cycleAutoAnswer' && autoAnswer}
         />
       ))}
       {/* Always on, width only: the height is the button row. main.css keeps

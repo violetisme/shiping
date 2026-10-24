@@ -721,20 +721,88 @@ html[data-code-wrap='off'] .code-block code {
   opacity: 0.4;
 }
 
-/* The picker, a bottom sheet over everything but the toast */
-#scene-sheet {
+/* 自动答题, the same bar as #scene with a switch instead of a chevron */
+#auto-answer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 13.5px;
+  line-height: 1.5;
+  transition: opacity 0.2s;
+}
+
+#auto-answer .label {
+  flex: none;
+  color: var(--muted);
+}
+
+#auto-answer[aria-pressed='true'] .label {
+  color: var(--accent);
+}
+
+#auto-answer-note {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#auto-answer.off {
+  opacity: 0.4;
+}
+
+#auto-answer .switch {
+  flex: none;
+  width: 34px;
+  height: 20px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background 0.2s;
+}
+
+#auto-answer .switch i {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface);
+  transition: transform 0.2s;
+}
+
+#auto-answer[aria-pressed='true'] .switch {
+  background: var(--accent);
+}
+
+#auto-answer[aria-pressed='true'] .switch i {
+  transform: translateX(14px);
+}
+
+/* The picker, a bottom sheet over everything but the toast; shared by the
+   scene sheet and the 自动答题 interval sheet */
+.sheet {
   position: fixed;
   inset: 0;
   z-index: 15;
 }
 
-#scene-mask {
+.sheet-mask {
   position: absolute;
   inset: 0;
   background: rgb(0 0 0 / 0.45);
 }
 
-#scene-list {
+.sheet-list {
   position: absolute;
   inset: auto 0 0 0;
   display: flex;
@@ -749,7 +817,7 @@ html[data-code-wrap='off'] .code-block code {
   box-shadow: var(--shadow);
 }
 
-#scene-list button {
+.sheet-list button {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -764,7 +832,7 @@ html[data-code-wrap='off'] .code-block code {
   text-align: left;
 }
 
-#scene-list button svg {
+.sheet-list button svg {
   width: 16px;
   height: 16px;
   flex: none;
@@ -772,12 +840,12 @@ html[data-code-wrap='off'] .code-block code {
   opacity: 0;
 }
 
-#scene-list button[aria-selected='true'] {
+.sheet-list button[aria-selected='true'] {
   border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
   color: var(--accent);
 }
 
-#scene-list button[aria-selected='true'] svg {
+.sheet-list button[aria-selected='true'] svg {
   opacity: 1;
 }
 

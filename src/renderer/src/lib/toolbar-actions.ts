@@ -56,7 +56,7 @@ export const TOOLBAR_ACTIONS: Record<AppMode, ToolbarAction[]> = {
   screenshot: [
     { action: 'takeScreenshot', Icon: Camera, label: '截图解题（新开对话）' },
     { action: 'appendScreenshot', Icon: ImagePlus, label: '追加截图' },
-    { action: 'toggleAutoAnswer', Icon: Timer, label: '开启/关闭自动答题（定时截图解答）' },
+    { action: 'cycleAutoAnswer', Icon: Timer, label: '自动答题：点按依次切换 关→5秒→10秒→15秒→20秒→30秒→60秒' },
     { action: 'pickCaptureRegion', Icon: Crop, label: '框选截图区域' },
     { action: 'stopSolutionStream', Icon: CircleStop, label: '停止生成' },
     ...COMMON_ACTIONS,

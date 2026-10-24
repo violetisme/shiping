@@ -44,6 +44,11 @@
           <span id="scene-name"></span>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
         </button>
+        <button id="auto-answer" hidden aria-pressed="false">
+          <span class="label">自动答题</span>
+          <span id="auto-answer-note"></span>
+          <span class="switch" aria-hidden="true"><i></i></span>
+        </button>
         <div id="answer-meta" class="chips"></div>
         <div id="answer-error" class="error-box" hidden></div>
         <article id="answer" class="markdown"></article>
@@ -92,9 +97,13 @@
       <span class="label-start">开始答题</span>
       <span class="label-stop">停止解答</span>
     </button>
-    <div id="scene-sheet" hidden>
-      <div id="scene-mask"></div>
-      <div id="scene-list" role="listbox" aria-label="选择答题场景"></div>
+    <div id="scene-sheet" class="sheet" hidden>
+      <div class="sheet-mask"></div>
+      <div id="scene-list" class="sheet-list" role="listbox" aria-label="选择答题场景"></div>
+    </div>
+    <div id="auto-answer-sheet" class="sheet" hidden>
+      <div class="sheet-mask"></div>
+      <div id="auto-answer-list" class="sheet-list" role="listbox" aria-label="自动答题间隔"></div>
     </div>
     <div id="toast" hidden></div>
 

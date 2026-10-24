@@ -23,6 +23,11 @@ import type { StreamChunk } from './stream'
 import { requestHint, stopHints, clearConversation } from './conversation'
 import { markMobileDirty, pageMobile, registerMobileActionHandler, registerMobileSource } from './mobile-sync'
 import type { MobileAnswer } from '../shared/mobile'
+import {
+  AUTO_ANSWER_INTERVALS,
+  DEFAULT_AUTO_ANSWER_INTERVAL,
+  autoAnswerIntervalFromValue
+} from '../shared/auto-answer'
 
 type Shortcut = {
   action: string
@@ -373,9 +378,7 @@ const AUTO_ANSWER_BUSY_WAIT_MS = 1000
 let autoAnswerTimer: NodeJS.Timeout | null = null
 
 function autoAnswerIntervalMs(): number {
-  const seconds = Number(settings.autoAnswerInterval)
-  const finite = Number.isFinite(seconds) && seconds > 0 ? seconds : 10
-  return Math.max(AUTO_ANSWER_MIN_INTERVAL_MS, Math.round(finite * 1000))
+  return Math.max(AUTO_ANSWER_MIN_INTERVAL_MS, currentAutoAnswerInterval() * 1000)
 }
 
 function stopAutoAnswerLoop(): void {
@@ -410,12 +413,38 @@ function setAutoAnswer(on: boolean): void {
   if (state.autoAnswer === on) return
   state.autoAnswer = on
   broadcastAppState()
+  // The phones show a switch for it
+  markMobileDirty()
   if (on) {
     // The first capture happens right away; the rest follow the interval
     runAutoAnswerTick()
   } else {
     stopAutoAnswerLoop()
   }
+}
+
+/**
+ * One choice made on a control surface (the toolbar's cycling button, the
+ * phone's sheet): the interval to answer at, or null to turn it off. The
+ * renderer persists the interval and toasts; main applies it at once
+ */
+function applyAutoAnswerChoice(seconds: number | null): void {
+  if (seconds !== null && autoAnswerIntervalFromValue(seconds) === null) return
+  if (seconds === null) {
+    setAutoAnswer(false)
+  } else {
+    settings.autoAnswerInterval = seconds
+    setAutoAnswer(true)
+  }
+  const mainWindow = global.mainWindow
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('auto-answer-changed', seconds)
+  }
+}
+
+/** The stored interval, snapped to a choice the controls offer */
+function currentAutoAnswerInterval(): number {
+  return autoAnswerIntervalFromValue(settings.autoAnswerInterval) ?? DEFAULT_AUTO_ANSWER_INTERVAL
 }
 
 /**
@@ -829,10 +858,17 @@ const callbacks: Record<string, () => void> = {
     mainWindow.webContents.send('toggle-hint-mode')
   },
 
-  // 自动答题: the toolbar's toggle; the interval is set on the settings page
-  toggleAutoAnswer: () => {
+  // 自动答题: the toolbar's button cycles 关 → 5 → 10 → … → 60 → 关; the phone
+  // picks from a sheet (setAutoAnswerInterval, which carries its choice)
+  cycleAutoAnswer: () => {
     if (!state.inCoderPage) return
-    setAutoAnswer(!state.autoAnswer)
+    if (!state.autoAnswer) {
+      applyAutoAnswerChoice(currentAutoAnswerInterval())
+      return
+    }
+    const idx = AUTO_ANSWER_INTERVALS.indexOf(settings.autoAnswerInterval)
+    if (idx === -1 || idx === AUTO_ANSWER_INTERVALS.length - 1) applyAutoAnswerChoice(null)
+    else applyAutoAnswerChoice(AUTO_ANSWER_INTERVALS[idx + 1])
   },
 
   switchMode,
@@ -862,7 +898,7 @@ const clickableActions = new Set([
   'cycleScene',
   'generateHint',
   'toggleHintMode',
-  'toggleAutoAnswer',
+  'cycleAutoAnswer',
   'switchMode'
 ])
 
@@ -961,6 +997,12 @@ ipcMain.handle('triggerAction', (_event, action: string) => runAction(action))
 registerMobileActionHandler((action, value) => {
   if (action === 'setScene') {
     sendSetScene(value)
+    return
+  }
+  if (action === 'setAutoAnswerInterval') {
+    // An unknown value is dropped, not taken as off
+    const seconds = value === 'off' ? null : autoAnswerIntervalFromValue(value)
+    if (value === 'off' || seconds !== null) applyAutoAnswerChoice(seconds)
     return
   }
   runAction(action)

@@ -46,6 +46,10 @@ export interface MobileState {
   paging: number
   screenshot: MobileAnswer
   conversation: MobileConversation
+  /** 截图模式's 自动答题 is on; the phone shows a switch for it. Absent from an older app */
+  autoAnswer?: boolean
+  /** The seconds one 自动答题 cycle captures at, one of the shared interval choices */
+  autoAnswerInterval?: number
   /** Absent until the app's renderer synced its scene list (or 截图模式 has none) */
   scene?: MobileScene
 }
