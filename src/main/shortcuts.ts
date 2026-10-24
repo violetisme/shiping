@@ -859,7 +859,13 @@ const callbacks: Record<string, () => void> = {
   },
 
   // 自动答题: the toolbar's button cycles 关 → 5 → 10 → … → 60 → 关; the phone
-  // picks from a sheet (setAutoAnswerInterval, which carries its choice)
+  // picks from a sheet (setAutoAnswerInterval, which carries its choice); the
+  // shortcut just flips it, at the interval already set
+  toggleAutoAnswer: () => {
+    if (!state.inCoderPage) return
+    applyAutoAnswerChoice(state.autoAnswer ? null : currentAutoAnswerInterval())
+  },
+
   cycleAutoAnswer: () => {
     if (!state.inCoderPage) return
     if (!state.autoAnswer) {

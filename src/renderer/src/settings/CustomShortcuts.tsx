@@ -101,6 +101,11 @@ export function CustomShortcuts() {
             description="重新框选截图时只截的区域，Enter 确认、Esc 取消"
             shortcut="pickCaptureRegion"
           />
+          <Shortcut
+            label="切换自动答题"
+            description="开启后按设定的间隔自动截屏解答（间隔在「设置 → 截图模式」里调）；再按一次关闭"
+            shortcut="toggleAutoAnswer"
+          />
         </div>
 
         {/* Conversation mode */}

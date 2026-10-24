@@ -81,6 +81,11 @@ const defaultShortcuts: Record<string, Omit<Shortcut, 'defaultKey'>> = {
     key: `${platformAlt}+Shift+R`,
     category: 'Screenshot'
   },
+  toggleAutoAnswer: {
+    action: 'toggleAutoAnswer',
+    key: `${platformAlt}+Shift+A`,
+    category: 'Screenshot'
+  },
   generateHint: {
     action: 'generateHint',
     key: `${platformAlt}+G`,
