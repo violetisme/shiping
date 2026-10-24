@@ -5,6 +5,7 @@ import type { LucideIcon } from 'lucide-react'
 import { WindowResizeHandles } from '@/components/WindowResizeHandles'
 import { applyTheme } from '@/lib/theme'
 import { useAppStore } from '@/lib/store/app'
+import { cn } from '@/lib/utils'
 
 /** Mirrors `.overlay-toolbar` in main.css: `p-2` around `size-7` buttons with `gap-0.5` */
 const BAR_PADDING = 8
@@ -21,6 +22,7 @@ export function OverlayToolbar() {
   const barRef = useRef<HTMLDivElement>(null)
   const syncAppState = useAppStore((state) => state.syncAppState)
   const inConversationPage = useAppStore((state) => state.inConversationPage)
+  const autoAnswer = useAppStore((state) => state.autoAnswer)
   const actions = TOOLBAR_ACTIONS[inConversationPage ? 'conversation' : 'screenshot']
   const visibleCount = useVisibleActionCount(barRef, actions.length)
 
@@ -54,7 +56,13 @@ export function OverlayToolbar() {
   return (
     <div ref={barRef} className="overlay-toolbar overlay-toolbar-root">
       {actions.slice(0, visibleCount).map(({ action, Icon }) => (
-        <ToolbarButton key={action} action={action} Icon={Icon} hoverDelay={hoverDelay} />
+        <ToolbarButton
+          key={action}
+          action={action}
+          Icon={Icon}
+          hoverDelay={hoverDelay}
+          active={action === 'toggleAutoAnswer' && autoAnswer}
+        />
       ))}
       {/* Always on, width only: the height is the button row. main.css keeps
           these edges from ever showing a resize cursor. `nonActivating` because
@@ -110,11 +118,14 @@ function useVisibleActionCount(
 function ToolbarButton({
   action,
   Icon,
-  hoverDelay
+  hoverDelay,
+  active
 }: {
   action: ToolbarActionName
   Icon: LucideIcon
   hoverDelay: number
+  /** Toggle actions the state main pushes says are on */
+  active?: boolean
 }) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isDwelling, setIsDwelling] = useState(false)
@@ -146,6 +157,7 @@ function ToolbarButton({
     <Button
       variant="ghost"
       size="icon"
+      className={cn(active && 'bg-primary/20 text-primary')}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={cancelDwell}
       onMouseUp={(event) => {

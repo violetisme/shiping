@@ -15,6 +15,9 @@ import { ModeProfileSelect } from '../ModeProfileSelect'
 import { SceneEditor } from '../SceneEditor'
 import { Field, SaveDirField, SettingsCard } from '../components'
 
+/** 自动答题的截屏间隔选项（秒） */
+const AUTO_ANSWER_INTERVAL_OPTIONS = [5, 10, 15, 20, 30, 60]
+
 export function ScreenshotSection({
   onEditProfile,
   onOpenKnowledge
@@ -24,6 +27,7 @@ export function ScreenshotSection({
 }) {
   const {
     screenshotDisplay,
+    autoAnswerInterval,
     screenshotAutoSave,
     screenshotDir,
     codeAutoSave,
@@ -66,6 +70,27 @@ export function ScreenshotSection({
                 <SelectItem value="none">不展示</SelectItem>
                 <SelectItem value="count">卡片显示截图数量</SelectItem>
                 <SelectItem value="gallery">显示全部缩略图（默认）</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field
+            label="自动答题间隔"
+            note="在悬浮工具条开启「自动答题」后，每隔这么多秒自动截屏并解答一次（每次新开对话）；上一题还在解答时会等它完成"
+          >
+            <Select
+              value={String(autoAnswerInterval)}
+              onValueChange={(val) => updateSetting('autoAnswerInterval', Number(val))}
+            >
+              <SelectTrigger className="w-60 shrink-0 bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {AUTO_ANSWER_INTERVAL_OPTIONS.map((seconds) => (
+                  <SelectItem key={seconds} value={String(seconds)}>
+                    每 {seconds} 秒
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>

@@ -16,6 +16,7 @@ import {
   MousePointer2,
   Sun,
   SunDim,
+  Timer,
   Zap,
   type LucideIcon
 } from 'lucide-react'
@@ -55,6 +56,7 @@ export const TOOLBAR_ACTIONS: Record<AppMode, ToolbarAction[]> = {
   screenshot: [
     { action: 'takeScreenshot', Icon: Camera, label: '截图解题（新开对话）' },
     { action: 'appendScreenshot', Icon: ImagePlus, label: '追加截图' },
+    { action: 'toggleAutoAnswer', Icon: Timer, label: '开启/关闭自动答题（定时截图解答）' },
     { action: 'pickCaptureRegion', Icon: Crop, label: '框选截图区域' },
     { action: 'stopSolutionStream', Icon: CircleStop, label: '停止生成' },
     ...COMMON_ACTIONS,

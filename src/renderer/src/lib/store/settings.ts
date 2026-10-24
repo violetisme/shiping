@@ -274,6 +274,9 @@ interface Settings {
   /** 只截取某块屏幕上的这块区域；为 null 时截取整个屏幕 */
   captureRegion: CaptureRegion | null
 
+  /** 自动答题：开启后每隔多少秒自动截屏解答一次（工具条上的开关） */
+  autoAnswerInterval: number
+
   screenshotAutoSave: boolean
   screenshotDir: string
 
@@ -411,6 +414,8 @@ const defaultSettings: Settings = {
   screenshotDisplay: 'gallery',
   captureScreen: CAPTURE_SCREEN_CURSOR,
   captureRegion: null,
+
+  autoAnswerInterval: 10,
 
   screenshotAutoSave: false,
   screenshotDir: '',

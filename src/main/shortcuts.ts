@@ -352,7 +352,71 @@ setPageChangeHandler(() => {
   broadcastAppState()
   // The phones follow the mode on screen
   markMobileDirty()
+  // 自动答题 runs only on 截图模式's page: pause off it, resume on it
+  if (!state.inCoderPage) {
+    stopAutoAnswerLoop()
+  } else if (state.autoAnswer && !autoAnswerTimer && !currentStreamContext) {
+    scheduleAutoAnswerTick(autoAnswerIntervalMs())
+  }
 })
+
+// ---------------------------------------------------------------------------
+// 自动答题 (auto answer): while on, 截图模式's capture flow runs by itself,
+// one fresh conversation per interval, as if the screenshot shortcut were
+// pressed each time. The interval lives in the renderer settings store and
+// arrives here through the settings sync; the loop reads it every round.
+// ---------------------------------------------------------------------------
+
+const AUTO_ANSWER_MIN_INTERVAL_MS = 3000
+/** While an answer is still streaming, recheck this often instead of cutting it off */
+const AUTO_ANSWER_BUSY_WAIT_MS = 1000
+let autoAnswerTimer: NodeJS.Timeout | null = null
+
+function autoAnswerIntervalMs(): number {
+  const seconds = Number(settings.autoAnswerInterval)
+  const finite = Number.isFinite(seconds) && seconds > 0 ? seconds : 10
+  return Math.max(AUTO_ANSWER_MIN_INTERVAL_MS, Math.round(finite * 1000))
+}
+
+function stopAutoAnswerLoop(): void {
+  if (autoAnswerTimer) {
+    clearTimeout(autoAnswerTimer)
+    autoAnswerTimer = null
+  }
+}
+
+function scheduleAutoAnswerTick(delayMs: number): void {
+  stopAutoAnswerLoop()
+  autoAnswerTimer = setTimeout(() => {
+    autoAnswerTimer = null
+    runAutoAnswerTick()
+  }, delayMs)
+}
+
+function runAutoAnswerTick(): void {
+  if (!state.autoAnswer || !state.inCoderPage) return
+  // The last question is still being answered: wait for it rather than
+  // aborting it halfway, then capture
+  if (currentStreamContext) {
+    scheduleAutoAnswerTick(AUTO_ANSWER_BUSY_WAIT_MS)
+    return
+  }
+  void Promise.resolve(callbacks.takeScreenshot()).then(() => {
+    if (state.autoAnswer && state.inCoderPage) scheduleAutoAnswerTick(autoAnswerIntervalMs())
+  })
+}
+
+function setAutoAnswer(on: boolean): void {
+  if (state.autoAnswer === on) return
+  state.autoAnswer = on
+  broadcastAppState()
+  if (on) {
+    // The first capture happens right away; the rest follow the interval
+    runAutoAnswerTick()
+  } else {
+    stopAutoAnswerLoop()
+  }
+}
 
 /**
  * When the current request started, or null when none is running.
@@ -765,6 +829,12 @@ const callbacks: Record<string, () => void> = {
     mainWindow.webContents.send('toggle-hint-mode')
   },
 
+  // 自动答题: the toolbar's toggle; the interval is set on the settings page
+  toggleAutoAnswer: () => {
+    if (!state.inCoderPage) return
+    setAutoAnswer(!state.autoAnswer)
+  },
+
   switchMode,
 
   // Works on every page: it only sets up future screenshots
@@ -792,6 +862,7 @@ const clickableActions = new Set([
   'cycleScene',
   'generateHint',
   'toggleHintMode',
+  'toggleAutoAnswer',
   'switchMode'
 ])
 

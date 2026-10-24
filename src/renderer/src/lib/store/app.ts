@@ -5,6 +5,8 @@ interface AppState {
   ignoreMouse: boolean
   /** 对话模式's page is on screen; the toolbar window shows that mode's buttons */
   inConversationPage: boolean
+  /** 截图模式's 自动答题 is on; the toolbar button shows it lit up */
+  autoAnswer: boolean
 }
 
 interface AppStore extends AppState {
@@ -19,7 +21,8 @@ interface AppStore extends AppState {
 
 const defaultState: AppState = {
   ignoreMouse: false,
-  inConversationPage: false
+  inConversationPage: false,
+  autoAnswer: false
 }
 
 export const useAppStore = create<AppStore>()((set) => ({
@@ -35,6 +38,10 @@ export const useAppStore = create<AppStore>()((set) => ({
     set((state) => ({ ignoreMouse: !state.ignoreMouse }))
   },
   syncAppState: (state) => {
-    set({ ignoreMouse: state.ignoreMouse, inConversationPage: state.inConversationPage })
+    set({
+      ignoreMouse: state.ignoreMouse,
+      inConversationPage: state.inConversationPage,
+      autoAnswer: state.autoAnswer
+    })
   }
 }))

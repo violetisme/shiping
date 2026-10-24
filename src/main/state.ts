@@ -39,7 +39,9 @@ export const state = {
    * would leave the user with a window they cannot click.
    */
   inSettingsPage: false,
-  ignoreMouse: false
+  ignoreMouse: false,
+  /** 截图模式's 自动答题 is on: main captures and answers every so often */
+  autoAnswer: false
 }
 
 export type AppState = typeof state

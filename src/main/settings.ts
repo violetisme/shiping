@@ -152,7 +152,9 @@ export const settings = {
    */
   scenes: [] as SceneInfo[],
   /** 截图模式's active scene id, synced with the scenes */
-  activeSceneId: ''
+  activeSceneId: '',
+  /** 自动答题: seconds between captures while it is on, synced from the renderer */
+  autoAnswerInterval: 10
 }
 
 export type AppSettings = typeof settings
